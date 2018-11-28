@@ -1,0 +1,9 @@
+参考：https://www.cnblogs.com/flying607/p/7598248.html 
+CAS 5.1.x 的搭建和使用（一）—— 通过Overlay搭建服务端
+
+clone CAS Overlay的代码，checkout出5.1的代码，按README.md方法构建cas.war。
+把它搞到tomcat上了，就可以访问了。
+但....
+cas要用https访问，看cas-overlay-template目录下的build.sh文件，有个gencert参数实现，
+运行它可以在/etc/cas目录生成一个cas.cer证书
+
