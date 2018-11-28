@@ -5,5 +5,27 @@ clone CAS Overlay的代码，checkout出5.1的代码，按README.md方法构建c
 把它搞到tomcat上了，就可以访问了。
 但....
 cas要用https访问，看cas-overlay-template目录下的build.sh文件，有个gencert参数实现，
-运行它可以在/etc/cas目录生成一个cas.cer证书
+运行它可以在/etc/cas目录生成keystore且从中导出一个cas.cer证书。
+build.sh这个参数的源码：
+function gencert() {
+    if [[ ! -d /etc/cas ]] ; then 
+        copy
+    fi
+    which keytool
+    if [[ $? -ne 0 ]] ; then
+        echo Error: Java JDK \'keytool\' is not installed or is not in the path
+        exit 1
+    fi
+    # override DNAME and CERT_SUBJ_ALT_NAMES before calling or use dummy values
+    DNAME="${DNAME:-CN=cas.example.org,OU=Example,OU=Org,C=US}"
+    CERT_SUBJ_ALT_NAMES="${CERT_SUBJ_ALT_NAMES:-dns:example.org,dns:localhost,ip:127.0.0.1}"
+    echo "Generating keystore for CAS with DN ${DNAME}"
+    keytool -genkeypair -alias cas -keyalg RSA -keypass changeit -storepass changeit -keystore /etc/cas/thekeystore -dname ${DNAME} -ext SAN=${CERT_SUBJ_ALT_NAMES}
+    keytool -exportcert -alias cas -storepass changeit -keystore /etc/cas/thekeystore -file /etc/cas/cas.cer
+}
+可以看keypass和storepass密码设置为changeit，把thekeystore拷贝到tomcat的myssl目录，配置server.xml的https的Connector即可。之前已经配置了好了一个证书，见：https://github.com/wenguang/lrc-https/tree/master/keytool-self-signed-tomcat ，配置哪个keystore都行。
+
+- http://cas.server.name:8080/cas
+- https://cas.server.name:8443/cas
+以上两个访问见截图
 
